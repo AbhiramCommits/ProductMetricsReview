@@ -58,15 +58,13 @@ first_date_col <- function(x) {
 
 tables <- list()
 for (f in sql_files) {
-  table <- sub("\\.sql$", "", basename(f))
+  table <- sub("^[0-9]+_", "", sub("\\.sql$", "", basename(f)))
   out_path <- file.path(SNAPSHOT_DIR, paste0(table, ".parquet"))
   query <- paste(readLines(f, warn = FALSE), collapse = "\n")
 
   message("Extracting ", table, " ...")
-  job <- bq_perform_query(query, billing = project_id)
-  bq_job_wait(job, quiet = TRUE)
-
-  df <- bq_table_download(bq_job_table(job), bigint = "integer64")
+  tb <- bq_project_query(project_id, query)
+  df <- bq_table_download(tb, bigint = "integer64")
 
   n <- nrow(df)
   if (n == 0L) {
@@ -99,12 +97,6 @@ for (f in sql_files) {
     date_max <- as.character(max(as.Date(dates)))
   }
 
-  bytes <- NA_real_
-  meta <- tryCatch(bq_job_meta(job), error = function(e) NULL)
-  if (!is.null(meta) && !is.null(meta$statistics$totalBytesProcessed)) {
-    bytes <- as.numeric(meta$statistics$totalBytesProcessed)
-  }
-
   write_parquet(df, out_path)
 
   tables[[table]] <- list(
@@ -113,8 +105,7 @@ for (f in sql_files) {
     parquet_file = file.path("data", "snapshot", basename(out_path)),
     rows = n,
     date_min = date_min,
-    date_max = date_max,
-    bytes_processed = bytes
+    date_max = date_max
   )
   message("  -> ", out_path, " (", n, " rows)")
 }

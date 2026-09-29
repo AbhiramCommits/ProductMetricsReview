@@ -28,6 +28,21 @@ output/         Generated artifacts (not committed)
 tests/          testthat tests
 ```
 
+## Metric definitions (`sql/`, one table per file)
+
+| File | Table | Grain |
+|------|-------|-------|
+| `10_daily_active.sql` | `daily_active(event_date, dau, sessions, new_users)` | day |
+| `11_funnel_daily.sql` | `funnel_daily(event_date, device_category, sessions, view_item_sessions, add_to_cart_sessions, begin_checkout_sessions, purchase_sessions)` | day x device |
+| `12_retention_cohorts.sql` | `retention_cohorts(cohort_week, weeks_since_first_visit, cohort_size, retained_users)` | cohort week x week |
+| `13_revenue_daily.sql` | `revenue_daily(event_date, device_category, purchases, revenue_usd)` | day x device |
+| `14_session_outcomes.sql` | `session_outcomes(event_date, device_category, country, is_returning_user, purchased, revenue_usd)` | session |
+
+Sessions are `user_pseudo_id` + `ga_session_id` (UNNESTed from `event_params`); all queries
+bound the window with `_TABLE_SUFFIX BETWEEN '20201101' AND '20210131'`. The funnel is ordered
+(session counts at a step only if it reached every earlier step in timestamp order). All
+metric logic lives in `sql/`; R only reads the committed snapshot tables.
+
 ## Setup
 
 ```sh

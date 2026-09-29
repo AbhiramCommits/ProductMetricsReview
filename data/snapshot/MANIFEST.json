@@ -1,0 +1,47 @@
+{
+  "extract_time": "2026-09-29T22:03:31Z",
+  "gcp_project_id": "igneous-sweep-510121-e4",
+  "source_dataset": "bigquery-public-data.ga4_obfuscated_sample_ecommerce",
+  "tables": [
+    {
+      "table": "daily_active",
+      "query_file": "sql/10_daily_active.sql",
+      "parquet_file": "data/snapshot/daily_active.parquet",
+      "rows": 92,
+      "date_min": "2020-11-01",
+      "date_max": "2021-01-31"
+    },
+    {
+      "table": "funnel_daily",
+      "query_file": "sql/11_funnel_daily.sql",
+      "parquet_file": "data/snapshot/funnel_daily.parquet",
+      "rows": 276,
+      "date_min": "2020-11-01",
+      "date_max": "2021-01-31"
+    },
+    {
+      "table": "retention_cohorts",
+      "query_file": "sql/12_retention_cohorts.sql",
+      "parquet_file": "data/snapshot/retention_cohorts.parquet",
+      "rows": 90,
+      "date_min": "2020-10-26",
+      "date_max": "2021-01-25"
+    },
+    {
+      "table": "revenue_daily",
+      "query_file": "sql/13_revenue_daily.sql",
+      "parquet_file": "data/snapshot/revenue_daily.parquet",
+      "rows": 245,
+      "date_min": "2020-11-01",
+      "date_max": "2021-01-31"
+    },
+    {
+      "table": "session_outcomes",
+      "query_file": "sql/14_session_outcomes.sql",
+      "parquet_file": "data/snapshot/session_outcomes.parquet",
+      "rows": 360129,
+      "date_min": "2020-11-01",
+      "date_max": "2021-01-31"
+    }
+  ]
+}
