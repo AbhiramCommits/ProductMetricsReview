@@ -1,0 +1,4 @@
+"metric","model","mean_rmse","beat_snaive"
+"dau","ets",546.45099727352,TRUE
+"purchase_sessions","ets",25.9503282579396,TRUE
+"revenue_usd","arima",2264.13411489332,TRUE

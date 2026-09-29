@@ -1,6 +1,6 @@
-.PHONY: all extract analyze forecast report test
+.PHONY: all extract analyze forecast detect report test
 
-all: analyze forecast report test
+all: analyze forecast detect report test
 
 extract:
 	Rscript R/extract.R
@@ -10,6 +10,9 @@ analyze:
 
 forecast:
 	Rscript R/forecast.R
+
+detect:
+	Rscript R/detect.R
 
 report:
 	Rscript R/report.R

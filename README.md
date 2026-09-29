@@ -22,9 +22,9 @@ silently undercount.
 
 ```
 sql/            BigQuery Standard SQL metric definitions (one table per file)
-R/              R scripts (extract, analyze, forecast, report)
+R/              R scripts (extract, analyze, forecast, detect, report)
 data/snapshot/  Committed Parquet snapshots + MANIFEST.json (input to analysis, no creds needed)
-output/         Generated artifacts (not committed)
+output/         Generated CSV artifacts (committed); output/tmp/ is ignored
 tests/          testthat tests
 ```
 
@@ -43,14 +43,38 @@ bound the window with `_TABLE_SUFFIX BETWEEN '20201101' AND '20210131'`. The fun
 (session counts at a step only if it reached every earlier step in timestamp order). All
 metric logic lives in `sql/`; R only reads the committed snapshot tables.
 
+## Forecasting (`R/forecast.R`)
+
+Three daily series: `dau`, `purchase_sessions`, `revenue_usd`. Models compared with fable:
+ETS (weekly season), ARIMA, and SNAIVE (weekly lag) as baseline; a model only "wins" if it
+beats SNAIVE. Backtest: rolling-origin CV (min 42-day training, 7-day horizon, 7-day step);
+MAE/RMSE/MAPE per model per series per fold plus the fold mean in `output/backtest.csv`,
+winners in `output/forecast_winners.csv`, 14-day forecasts with 80%/95% intervals in
+`output/forecasts.csv`.
+
+**Holiday handling.** Black Friday through Christmas (2020-11-27 .. 2020-12-25) sits inside
+the window and is a structural level shift, not weekly seasonality. Approach: an explicit
+holiday dummy as an exogenous regressor for ARIMA — the model class where a level shift is
+hardest to represent otherwise; ETS and SNAIVE cannot take regressors and absorb the spike
+through their own adaptation. The alternative considered — reporting accuracy with and
+without the holiday weeks — was rejected because it removes the most business-critical days
+from the evaluation.
+
+## Regression detection (`R/detect.R`)
+
+The last 14 days are held out and the winning model is refit on the remainder. A regression
+is flagged when actuals fall below the 95% lower bound on 2+ consecutive days, or below the
+80% lower bound on 5 of the trailing 7 days; a single-day dip can never fire. The rule is
+applied as specified, not tuned against this data. Results: `output/regressions.csv`.
+
 ## Setup
 
 ```sh
 Rscript -e 'renv::restore()'   # install the pinned package stack (renv.lock)
 ```
 
-`boot` is a recommended package shipped with R itself, so it is intentionally absent from
-`renv.lock` but available in any R installation.
+The lockfile includes `feasts`, the tidyverts companion package required internally by
+`fable::ARIMA()`, in addition to the declared stack.
 
 ## Workflow
 
@@ -58,10 +82,11 @@ Rscript -e 'renv::restore()'   # install the pinned package stack (renv.lock)
 |---------------|------------------------------------------------|----------------------|
 | `make extract`  | Run `sql/*.sql`, snapshot Parquet + MANIFEST   | yes (`GCP_PROJECT_ID`) |
 | `make analyze`  | Statistics from the committed snapshot         | no |
-| `make forecast` | Time-series forecasting                        | no |
-| `make report`   | Regression detection, cost-benefit, memo       | no |
+| `make forecast` | Time-series forecasting + backtest             | no |
+| `make detect`   | Regression detection on the last 14 days       | no |
+| `make report`   | Cost-benefit sizing, decision memo             | no |
 | `make test`     | testthat suite                                 | no |
-| `make all`      | analyze + forecast + report + test             | no |
+| `make all`      | analyze + forecast + detect + report + test    | no |
 
 All analysis steps run from the committed snapshot in a clean clone; only `extract` needs
 BigQuery credentials:
