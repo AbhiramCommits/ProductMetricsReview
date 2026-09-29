@@ -1,0 +1,32 @@
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# renv
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/sandbox/
+renv/staging/
+renv/python/
+
+# generated outputs (rebuilt by make)
+output/tmp/
+output/*.html
+output/*.pdf
+output/*.docx
+output/*.png
+
+# raw event-level dumps must never be committed
+data/raw/
+
+# credentials / key files: never commit
+*.json
+!data/snapshot/MANIFEST.json
+
+# OS
+.DS_Store
