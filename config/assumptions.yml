@@ -1,0 +1,71 @@
+# Sizing inputs for the chosen product change:
+# improving the view_item -> add_to_cart funnel step (the largest drop, Q2).
+# Every entry is labeled "measured" (read from output/, never hardcoded here)
+# or "assumed" (an assumption with low / point / high).
+
+window:
+  start: "2020-11-01"
+  end: "2021-01-31"
+  days: 92
+
+inputs:
+  baseline_step_conversion:
+    basis: measured
+    source: "output/q2_worst_step_test.csv"
+    field: "conversion_pooled"
+    note: "pooled view_item -> add_to_cart conversion"
+
+  addressable_sessions_92d:
+    basis: measured
+    source: "output/q2_worst_step_test.csv"
+    field: "entered_pooled"
+    note: "sessions that reached view_item in the 92-day window"
+
+  carts_pooled:
+    basis: measured
+    source: "output/q2_funnel_steps.csv"
+    where: "step_from == view_item_sessions"
+    field: "exited"
+    note: "sum of exited over devices; = add_to_cart_sessions pooled"
+
+  purchases_pooled:
+    basis: measured
+    source: "output/q2_funnel_steps.csv"
+    where: "step_to == purchase_sessions"
+    field: "exited"
+    note: "sum of exited over devices; = purchase_sessions pooled"
+
+  aov_usd:
+    basis: measured
+    source: "output/q3_holiday_value_volume.csv"
+    where: "metric == aov_usd"
+    field: "pre"
+    note: "pre-holiday average order value (business-as-usual, excludes zero-revenue obfuscated purchases)"
+
+  relative_lift:
+    basis: assumed
+    low: 0.05
+    point: 0.10
+    high: 0.20
+    note: "relative lift on the view_item -> add_to_cart step conversion. This is an ASSUMPTION, not a measured effect."
+
+  gross_margin:
+    basis: assumed
+    low: 0.55
+    point: 0.65
+    high: 0.75
+    note: "gross margin on merchandise revenue; assumed for the Google Merchandise Store"
+
+  build_cost_usd:
+    basis: assumed
+    low: 30000
+    point: 50000
+    high: 90000
+    note: "one-time engineering + design cost to build the step fix"
+
+  yearly_maintenance_usd:
+    basis: assumed
+    low: 8000
+    point: 12000
+    high: 20000
+    note: "ongoing upkeep cost per year"

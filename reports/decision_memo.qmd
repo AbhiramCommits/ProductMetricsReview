@@ -1,0 +1,121 @@
+---
+title: "Fix the view→cart step"
+subtitle: "Decision memo — Google Merchandise Store (GA4 sample)"
+format:
+  gfm: default
+  html: default
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+sizing <- read.csv("../output/opportunity_sizing.csv", stringsAsFactors = FALSE)
+sens <- read.csv("../output/sensitivity.csv", stringsAsFactors = FALSE)
+q2 <- read.csv("../output/q2_worst_step_test.csv", stringsAsFactors = FALSE)
+
+v <- function(item) sizing$value[sizing$item == item]
+fmt_usd <- function(x) scales::dollar(x)
+fmt_pct <- function(x) scales::percent(x, accuracy = 0.1)
+fmt_n <- function(x) scales::comma(x, accuracy = 1)
+
+lift <- v("relative_lift")
+be_lift <- v("break_even_lift")
+net <- v("net_benefit_year1")
+roi <- v("roi_year1")
+payback <- v("payback_months")
+gp <- v("incremental_gross_profit_year")
+rev <- v("incremental_revenue_year")
+purch <- v("incremental_purchases_year")
+addr <- v("addressable_sessions_year")
+build <- v("build_cost_usd")
+maint <- v("yearly_maintenance_usd")
+base_conv <- v("baseline_step_conversion")
+ctp <- v("cart_to_purchase_conversion")
+aov_usd <- v("aov_usd")
+dropped <- q2$dropped_sessions[1]
+lift_swing <- sens$swing[1] / 1e3
+build_swing <- sens$swing[sens$input == "build_cost_usd"] / 1e3
+
+tbl <- data.frame(
+  Item = c(
+    "View→cart step conversion today",
+    "Sessions lost at the step (92 days)",
+    "Addressable sessions per year",
+    "Cart→purchase conversion",
+    "Assumed relative lift on the step",
+    "Average order value (pre-holiday)",
+    "Incremental purchases per year",
+    "Incremental revenue per year",
+    "Incremental gross profit per year",
+    "Build cost (one-time)",
+    "Yearly maintenance",
+    "Net benefit, year 1",
+    "ROI, year 1",
+    "Payback",
+    "Break-even lift"
+  ),
+  Value = c(
+    fmt_pct(base_conv),
+    fmt_n(dropped),
+    fmt_n(addr),
+    fmt_pct(ctp),
+    fmt_pct(lift),
+    fmt_usd(aov_usd),
+    fmt_n(purch),
+    fmt_usd(rev),
+    fmt_usd(gp),
+    fmt_usd(build),
+    fmt_usd(maint),
+    fmt_usd(net),
+    fmt_pct(roi),
+    paste0(round(payback, 1), " months"),
+    fmt_pct(be_lift)
+  )
+)
+```
+
+# Recommendation
+
+**Don't build it yet.** At the assumed `r fmt_pct(lift)` lift, fixing the view→cart step earns only `r fmt_usd(net)` in year one — barely above break-even (the minimum lift that pays for itself is `r fmt_pct(be_lift)`). Run a cheap A/B experiment to prove the lift first; build only if it clears `r fmt_pct(be_lift)`.
+
+# Why
+
+- **The step is the biggest leak:** view→cart drops `r fmt_n(dropped)` sessions in 92 days — the single largest absolute funnel loss, at a `r fmt_pct(base_conv)` conversion.
+- **But the prize is small:** even a `r fmt_pct(lift)` lift yields only `r fmt_n(purch)` incremental purchases (~`r fmt_usd(rev)` revenue, `r fmt_usd(gp)` gross profit) per year against a `r fmt_usd(build)` build plus `r fmt_usd(maint)`/year upkeep.
+- **The answer hinges on one assumption:** the assumed lift swings year-1 net benefit by ~`r fmt_n(lift_swing)`k USD in sensitivity, while build cost swings it by only `r fmt_n(build_swing)`k — so an experiment that measures the lift is the highest-value next step.
+
+# What the data shows
+
+![DAU actuals and forecast with holdout](../charts/dau_forecast.png)
+
+![Funnel steps by device](../charts/funnel_by_device.png)
+
+![Device odds ratios](../charts/device_odds_ratios.png)
+
+![Retention cohorts](../charts/retention_heatmap.png)
+
+# Cost and return
+
+```{r}
+knitr::kable(tbl)
+```
+
+The project breaks even at a `r fmt_pct(be_lift)` lift on the step. Below that, net benefit is negative.
+
+![Sensitivity tornado](../charts/sizing_tornado.png)
+
+# What would change my mind
+
+- A **measured lift** (from an A/B test) at or above `r fmt_pct(be_lift)` — that converts this from a bet on an assumption into a positive-ROI build.
+- Evidence that the **cart→purchase downstream** (`r fmt_pct(ctp)` today) improves with a better cart experience, multiplying the value of the fix.
+- The **device parity result changing**: the funnel is uniform across devices now; a device-specific cliff would change the target and the sizing.
+- A **bigger lift upside** — if the assumed high case (`r fmt_pct(sens$high_value[1])`) is credible, the swing analysis shows the payoff re-rates the whole decision.
+
+# Method + limitations
+
+- **Observational data:** the GA4 public sample is one ecommerce store over 92 days; effects are correlations, not causal evidence. All figures come from `output/` CSVs and the committed snapshot.
+- **Obfuscated sample:** Google replaces some values with placeholders (e.g. `<Other>`); zero-revenue purchases are obfuscated NULLs and were excluded from AOV, not dropped silently.
+- **Holiday window:** Black Friday through Christmas sits inside the sample; sizing uses the pre-holiday AOV as business-as-usual and annualizes the 92-day funnel.
+- **Assumed lift:** the `r fmt_pct(lift)` point lift is an assumption, not a measured effect; the tornado chart and break-even lift make that explicit.

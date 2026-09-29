@@ -15,7 +15,9 @@ detect:
 	Rscript R/detect.R
 
 report:
-	Rscript R/report.R
+	Rscript R/size_opportunity.R
+	Rscript R/charts.R
+	quarto render reports/decision_memo.qmd
 
 test:
 	Rscript -e 'testthat::test_dir("tests/testthat", reporter = "summary")'

@@ -22,11 +22,21 @@ silently undercount.
 
 ```
 sql/            BigQuery Standard SQL metric definitions (one table per file)
-R/              R scripts (extract, analyze, forecast, detect, report)
+R/              R scripts (extract, analyze, forecast, detect, size_opportunity, charts)
+config/         Sizing assumptions (measured vs assumed, low/point/high)
 data/snapshot/  Committed Parquet snapshots + MANIFEST.json (input to analysis, no creds needed)
 output/         Generated CSV artifacts (committed); output/tmp/ is ignored
+charts/         PNG charts for the memo (committed)
+reports/        Quarto decision memo (qmd source, rendered gfm + html)
 tests/          testthat tests
 ```
+
+The decision layer sizes one product change (fixing the view→cart step) from
+`config/assumptions.yml` — measured inputs are read from `output/`, assumed inputs carry
+low/point/high and the lift is stated as an assumption, not a measured effect
+(`output/opportunity_sizing.csv`, `output/sensitivity.csv`, tornado chart). The memo
+(`reports/decision_memo.qmd`) pulls every figure from `output/` with inline R; no
+hand-typed numbers.
 
 ## Metric definitions (`sql/`, one table per file)
 
