@@ -1,0 +1,4 @@
+"metric","pre","post","change","change_unit","ci_low","ci_high","p_value","note"
+"aov_usd",93.1487138263666,80.4887791741473,-12.6599346522194,"usd_per_order",-20.0452572676393,-5.3180120761588,NA,"AOV over purchasing sessions with recorded revenue > 0; zero-revenue purchases excluded (obfuscated NULL revenue). BCa bootstrap, R = 10000, seed = 20261101."
+"purchase_sessions",1279,2321,81.4698983580923,"pct",NA,NA,NA,"All purchasing sessions, including zero-revenue (obfuscated) ones."
+"purchase_sessions_per_day",49.1923076923077,80.0344827586207,62.6971502520827,"pct",NA,NA,NA,"Window lengths: pre 26d, post 29d."

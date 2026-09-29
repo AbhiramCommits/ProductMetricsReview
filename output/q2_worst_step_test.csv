@@ -1,0 +1,2 @@
+"step_from","step_to","entered_pooled","exited_pooled","conversion_pooled","ci_low","ci_high","dropped_sessions","chi_sq","df","p_value"
+"view_item_sessions","add_to_cart_sessions",77020,15167,0.19692287717476,0.194129531020389,0.199746454443673,61853,1.8963316291445,2,0.387451029146029
